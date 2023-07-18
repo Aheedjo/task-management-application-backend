@@ -1,4 +1,3 @@
-import { users } from "../route/user.js";
 import { tasks } from "../route/task.js";
 import { buckets } from "../route/bucket.js";
 
