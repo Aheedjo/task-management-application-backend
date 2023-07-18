@@ -1,48 +1,65 @@
 import { buckets } from "../route/bucket.js";
 import { tasks } from "../route/task.js";
+import { Bucket } from "../model/index.js";
 
 export default {
-    getAllBuckets: (req, res) => {
+    getAllBuckets: async (req, res) => {
+        const allBuckets = await Bucket.find();
+
         return res.status(200).json({
             status: 'success',
             message: 'Successfully requested all buckets',
-            data: buckets
+            data: allBuckets
         });
     },
     
-    getOneBucket: (req, res) => {
+    getOneBucket: async (req, res) => {
         const { id } = req.params;
-        const bucket = buckets.find((bucket) => bucket.id == id)
+        const bucket = await label.findOne({_id: id});
 
-        return res.status(200).json({
-            status: 'success',
-            message: `Successfully requested bucket with id ${id}`,
-            data: bucket
-        });
-    },
-
-    addBucket: (req, res) => {
-        try {
-            const { name, tasks } = req.body;
-            const newBucket = { id: buckets.length + 1, name: name, tasks: tasks };
-            buckets.push(newBucket);
-
+        if(bucket) {
             return res.status(200).json({
                 status: 'success',
-                message: `Successfully added a bucket`,
-                data: newBucket
+                message: `Successfully requested bucket with id ${id}`,
+                data: bucket
             });
-        } catch {
+        } else {
             return res.status(404).json({
-                status: 'error'
+                status: 'error',
+                message: `Bucket with id: ${id} not found`
             });
         }
+    },
+
+    addBucket: async (req, res) => {
+        const { name, tasks } = req.body;
+        const bucket = await Bucket.create({
+            name: name, 
+            tasks: tasks
+        });
+        return res.status(200).json({
+            status: 'success',
+            message: `Successfully added a bucket`,
+            data: bucket
+        });
     },
     
     updateBucket: (req, res) => {
         const { id } = req.params;
         const { name, tasks } = req.body;
-        const bucket = buckets.find(bucket => bucket.id == id);
+        const bucket = Bucket.findOneAndUpdate(
+            {
+                _id: id
+            },
+            {
+                $set: {
+                    name: name,
+                },
+            },
+            {
+                new: true,
+            }
+        );
 
         if(!bucket) {
             return res.status(404).json({
@@ -51,24 +68,16 @@ export default {
             });
         }
 
-        if (name) {
-            bucket.name = name;
-        }
-        
-        if (tasks) {
-            bucket.tasks = Array.from(new Set((bucket.tasks).concat(tasks)));
-        }
-
         return res.status(200).json({
             status: 'success',
             message: `Successfully updated bucket with id ${id}`,
             data: bucket
-        })
+        });
     },
     
-    deleteBucket: (req, res) => {
+    deleteBucket: async (req, res) => {
         const { id } = req.params;
-        let indexToDelete = buckets.findIndex(bucket => bucket.id == id);
+        let bucket = Bucket.findOneAndDelete({_id: id});
 
         if(!indexToDelete) {
             return res.status(404).json({
@@ -76,8 +85,6 @@ export default {
                 message: `Bucket with id ${id} not found`
             });
         }
-
-        buckets.splice(indexToDelete, 1);
 
         return res.status(200).json({
             status: 'success',
