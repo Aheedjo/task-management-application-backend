@@ -1,57 +1,45 @@
-import { tasks } from "../route/task.js";
-import { buckets } from "../route/bucket.js";
+import { User } from "../model/index.js";
 
 export default {
-    getAllUsers: (req, res) => {
-        return res.status(200).json({
-            status: 'success',
-            message: 'Successfully requested all users',
-            data: users
-        })
-    },
-    
-    getUser: (req, res) => {
+    getUser: async (req, res) => {
         const { id } = req.params;
-
-        const user = users.find((user) => user.id == id)
+        const user = await User.findOne({_id: id});
 
         if(user) {
             return res.status(200).json({
                 status: 'success',
-                message: `Successfully requested user with id ${id}`,
+                message: `Successfully requested user with Id: ${id}`,
                 data: user
-            })
+            });
         } else {
             return res.status(404).json({
                 status: 'error',
-                message: `user with id: ${id} not found`
-            })
+                message: `user with Id: ${id} not found`
+            });
         }
     },
 
     addUser: async (req, res) => {
-        try {
-            const { email, name, password } = req.body;
-            const newUser = { id: users.length + 1, email: email, name: name, password: password };
-            users.push(newUser);
+            const { email, name, password, buckets, tasks } = req.body;
+            const user = await User.create({ 
+                name: name, 
+                email: email, 
+                password: password,
+                buckets: buckets,
+                tasks: tasks
+            });
         
             return res.status(200).json({
                 status: "success",
                 message: `Successfully added a user`,
-                data: newUser
+                data: user
             });
-
-        } catch (err) {
-            return res.status(404).json({
-                status: "error",
-            });
-        }
     },
     
-    updateUser: (req, res) => {
+    updateUser: async (req, res) => {
         const { id } = req.params;
-        const updateData = req.body;
-        const user = users.find(user => user.id == id);
+        const { name, email, password, buckets } = req.body;
+        const user = await User.findOne({ _id: id });
         
         if(!user) {
             return res.status(404).json({
@@ -60,57 +48,61 @@ export default {
             });
         }
         
-        if (updateData.name) {
-            user.name = updateData.name;
+        if (name) {
+            user.name = name;
         }
         
-        if (updateData.email) {
-            user.email = updateData.email;
+        if (email) {
+            user.email = email;
         }
     
-        if (updateData.password) {
-            user.password = updateData.password;
+        if (password) {
+            user.password = password;
         }
+
+        if (buckets) {
+            user.buckets = Array.from(new Set((user.buckets).concat(buckets)));
+        }
+
+        const updatedUser = await user.save();
         
         return res.status(200).json({
             status: 'success',
             message: `Successfully updated user with id ${id}`,
-            data: user
+            data: updatedUser
         })
     },
     
-    deleteUser: (req, res) => {
+    deleteUser: async (req, res) => {
         const { id } = req.params;
-        let indexToDelete = users.findIndex(user => user.id == id);
+        let user = await User.findOneAndDelete({ _id: id});
         
-        if(!indexToDelete) {
+        if(!user) {
             return res.status(404).json({
                 status: 'error',
-                message: `User with id ${id} not found`
+                message: `User with Id: ${id} not found`
             });
         }
         
-        users.splice(indexToDelete, 1)
-        
         return res.status(200).json({
             status: 'success',
-            message: `Successfully deleted user with id ${id}`,
-            data: users
+            message: `Successfully deleted user with Id: ${id}`,
         });
     },
     
-    getAllTasks: (req, res) => {
+    getAllTasks: async (req, res) => {
         const { id } = req.params;
-        const userTasks = tasks.find(task => task.userId == id);
+        const tasks = await User.find({ _id: id }).populate('tasks');
 
-        if(!userTasks) {
+
+        if(!tasks) {
             return res.status(404).json({
                 status: 'error',
                 message: `Tasks not found`
             });
         }
 
-        if(userTasks.length === 0) {
+        if(tasks.length === 0) {
             return res.status(404).json({
                 status: 'error',
                 message: `There are no tasks under the user with Id: ${id}`
@@ -120,22 +112,22 @@ export default {
         return res.status(200).json({
             status: 'success',
             message: `Successfully requested tasks`,
-            data: userTasks
+            data: tasks
         });
     },
 
-    getAllBuckets: (req, res) => {
+    getAllBuckets: async (req, res) => {
         const { id } = req.params;
-        const userBuckets = buckets.find(bucket => bucket.userId == id);
+        const buckets = await User.find({ _id: id }).populate('buckets');
 
-        if(!userBuckets) {
+        if(!buckets) {
             return res.status(404).json({
                 status: 'error',
                 message: `Buckets not found`
             });
         }
 
-        if(userBuckets.length === 0) {
+        if(buckets.length === 0) {
             return res.status(404).json({
                 status: 'error',
                 message: `There are no buckets under the user with Id: ${id}`
@@ -145,7 +137,7 @@ export default {
         return res.status(200).json({
             status: 'success',
             message: `Successfully requested buckets of user with Id: ${id} `,
-            data: userBuckets
+            data: buckets
         });
     }
 }

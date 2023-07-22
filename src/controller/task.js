@@ -1,4 +1,3 @@
-import { tasks } from "../route/task.js";
 import { Task } from "../model/index.js";
 
 export default {
@@ -14,30 +13,28 @@ export default {
     
     getOneTask: async (req, res) => {
         const { id } = req.params;
-        const task = await Task.findOne({_id: id});
+        const task = await Task.findOne({ _id: id });
         
         if(task) {
             return res.status(200).json({
                 status: 'success',
-                message: `Successfully requested task with id ${id}`,
+                message: `Successfully requested task with Id: ${id}`,
                 data: task
             });
         } else {
             return res.status(404).json({
                 status: 'error',
-                message: `Task with id: ${id} not found`
+                message: `Task with Id: ${id} not found`
             });
         }
     },
 
     addTask: async (req, res) => {
         const { name, userId ,bucketId, labels } = req.body;
-        const bucketObjectId = mongoose.Types.ObjectId(bucketId);
-        const userObjectId = mongoose.Types.ObjectId(userId);
         const task = await Task.create({
-            bucketId: bucketObjectId,
-            userId: userObjectId,
             name: name,
+            userId: userId,
+            bucketId: bucketId,
             status: 'New task',
             labels: labels,
         });
@@ -45,7 +42,7 @@ export default {
         if(!bucketId) {
             return res.status(404).json({
                 status: 'error',
-                message: 'Bucket id not provided',
+                message: 'Bucket Id not provided',
             });
         }
 
@@ -58,8 +55,8 @@ export default {
     
     updateTask: async (req, res) => {
         const { id } = req.params;
-        const { name, bucket, labels } = req.body;
-        const task = tasks.find(task => task.id == id);
+        const { name, status, labels, bucketId } = req.body;
+        const task = await Task.findOne({ _id: id });
 
         if(!task) {
             return res.status(404).json({
@@ -72,54 +69,56 @@ export default {
             task.name = name;
         }
         
-        if (bucket) {
-            task.bucket = bucket;
+        if (bucketId) {
+            task.bucketId = bucketId;
+        }
+
+        if (status) {
+            task.status = status;
         }
 
         if (labels) {
             task.labels = Array.from(new Set((task.labels).concat(labels)));
         }
 
+        const updatedTask = await task.save();
+
         return res.status(200).json({
             status: 'success',
             message: `Successfully updated task with id ${id}`,
-            data: task
+            data: updatedTask
         })
     },
 
     deleteTask: async (req, res) => {
         const { id } = req.params;
-        let indexToDelete = tasks.findIndex(task => task.id == id);
+        let task = await Task.findOneAndDelete({ _id: id });
 
-        if(!indexToDelete) {
+        if(!task) {
             return res.status(404).json({
                 status: 'error',
                 message: `Task with id ${id} not found`
             });
         }
 
-        tasks.splice(indexToDelete, 1);
-
         return res.status(200).json({
             status: 'success',
             message: `Successfully deleted task with id ${id}`,
-            data: tasks
         })
     },
 
     getLabels: async (req, res) => {
         const { id } = req.params;
-        const task = tasks.find(task => task.id == id);
-        const taskLabels = labels.filter(label => task.labels.includes(label.id));
+        const tasks = await Task.find({ _id: id }).populate('labels');
 
-        if(!taskLabels) {
+        if(!tasks) {
             return res.status(404).json({
                 status: 'error',
                 message: `Task labels not found`
             });
         }
 
-        if(taskLabels.length === 0) {
+        if(tasks.length === 0) {
             return res.status(404).json({
                 status: 'error',
                 message: `There are no labels under the task with Id: ${id}`
@@ -129,7 +128,7 @@ export default {
         return res.status(200).json({
             status: 'success',
             message: `Successfully requested tasks label for user with Id: ${id}`,
-            data: taskLabels
+            data: tasks
         });
     }
 }
