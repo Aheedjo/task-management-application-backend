@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 const task = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Label',
+        ref: 'User',
         required: true
     },
     bucketId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Label',
+        ref: 'Bucket',
         required: true
     },
     name: {

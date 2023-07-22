@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true,
-        unique: true,
-    },
+const user = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -23,6 +18,11 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Bucket'
     }],
-})
+    tasks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task'
+    }],
+});
 
-export default mongoose.model("User", userSchema);
+const userSchema = mongoose.model("User", user);
+export default userSchema;
