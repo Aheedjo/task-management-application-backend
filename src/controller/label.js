@@ -1,65 +1,66 @@
-import { labels } from "../route/label.js";
+import { Label } from "../model/index.js";
 
 export default {
-    getAllLabels: (req, res) => {
+    getAllLabels: async (req, res) => {
+        const allLabels = await Label.find();
+
         return res.status(200).json({
             status: 'success',
             message: 'Successfully requested all labels',
-            data: labels
+            data: allLabels
         });
     },
     
-    getOneLabel: (req, res) => {
+    getOneLabel: async (req, res) => {
         const { id } = req.params;
-        const label = labels.find((label) => label.id == id)
+        const label = await Label.findOne({_id: id});
 
         if(label) {
             return res.status(200).json({
                 status: 'success',
-                message: `Successfully requested label with id ${id}`,
+                message: `Successfully requested label with id: ${id}`,
                 data: label
             });
         } else {
             return res.status(404).json({
                 status: 'error',
                 message: `label with id: ${id} not found`
-            })
+            });
         }
-        
     },
 
-    addLabel: (req, res) => {
-        try {
-            const { name } = req.body;
-            const newLabel = { id: labels.length + 1, name: name };
-            labels.push(newLabel);
-        
-            return res.status(200).json({
-                status: "success",
-                message: `Successfully added a label`,
-                data: newLabel
-            });
-        } catch (err) {
-            return res.status(404).json({
-                status: "error",
-            });
-        }
+    addLabel: async (req, res) => {
+        const { name } = req.body;
+        const label = await Label.create({name: name})
+        return res.status(200).json({
+            status: "success",
+            message: `Successfully added a label`,
+            data: label
+        });
     },
     
-    updateLabel: (req, res) => {
+    updateLabel: async (req, res) => {
         const { id } = req.params;
         const { name } = req.body;
-        const label = labels.find(label => label.id == id);
+        const label = await Label.findOneAndUpdate(
+            {
+                _id: id
+            },
+            {
+                $set: {
+                    name: name,
+                },
+            },
+            {
+                new: true,
+            }
+        );
         
         if(!label) {
             return res.status(404).json({
                 status: 'error',
                 message: `Label with id ${id} not found`
             });
-        }
-        
-        if (name) {
-            label.name = name;
         }
         
         return res.status(200).json({
@@ -69,24 +70,20 @@ export default {
         })
     },
 
-    deleteLabel: (req, res) => {
+    deleteLabel: async (req, res) => {
         const { id } = req.params;
-        let indexToDelete = labels.findIndex(label => label.id == id);
-        console.log(indexToDelete);
+        const label = await Label.findOneAndDelete({ _id: id });
         
-        if(!indexToDelete) {
+        if(!label) {
             return res.status(404).json({
                 status: 'error',
                 message: `Label with id ${id} not found`
             });
         }
-
-        labels.splice(indexToDelete, 1);
         
         return res.status(200).json({
             status: 'succes',
             message: `Successfully deleted label with id ${id}`,
-            data: labels
         })
     },
 }

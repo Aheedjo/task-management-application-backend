@@ -1,8 +1,10 @@
 import express from "express";
 import bodyParser from "body-parser";
 import routes from "./route/index.js"
+import connectDB from "./config/database.js";
 
 const app = express();
+connectDB();
 const port = 3050;
 
 app.use(bodyParser.urlencoded({extended: true}));
