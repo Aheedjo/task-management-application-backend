@@ -1,4 +1,5 @@
-import { Task } from "../model/index.js";
+import { Task, Bucket, User, Label } from "../model/index.js";
+import { idsAreValidObjectIds, areIdsValid } from "../helper/validate.js";
 
 export default {
     getAllTasks: async (req, res) => {
@@ -15,7 +16,7 @@ export default {
         const { id } = req.params;
         const task = await Task.findOne({ _id: id });
         
-        if(task) {
+        if (task) {
             return res.status(200).json({
                 status: 'success',
                 message: `Successfully requested task with Id: ${id}`,
@@ -31,20 +32,58 @@ export default {
 
     addTask: async (req, res) => {
         const { name, userId ,bucketId, labels } = req.body;
+        const user = await User.findOne({_id: userId});
+        const bucket = await Bucket.findOne({_id: bucketId});
+        
+        if (!bucketId) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Bucket Id not provided',
+            });
+        }
+
+        if (!userId) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'User Id not provided',
+            });
+        }
+
+        if (!user) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'User not found',
+            });
+        }
+        
+        if (!bucket) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Bucket not found',
+            });
+        }
+
+        if (!idsAreValidObjectIds(labels)) {
+            if (!areIdsValid(labels, Label)) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Labels not valid',
+                });
+            }
+        }
+
         const task = await Task.create({
             name: name,
             userId: userId,
             bucketId: bucketId,
             status: 'New task',
             labels: labels,
-        });
-
-        if(!bucketId) {
-            return res.status(404).json({
+        }).catch((err) => {
+            return res.status(400).json({
                 status: 'error',
-                message: 'Bucket Id not provided',
-            });
-        }
+                message: `Invalid values passed`,
+            })
+        });
 
         return res.status(200).json({
             status: 'success',
@@ -58,7 +97,7 @@ export default {
         const { name, status, labels, bucketId } = req.body;
         const task = await Task.findOne({ _id: id });
 
-        if(!task) {
+        if (!task) {
             return res.status(404).json({
                 status: 'error',
                 message: `task with id ${id} not found`
@@ -94,7 +133,7 @@ export default {
         const { id } = req.params;
         let task = await Task.findOneAndDelete({ _id: id });
 
-        if(!task) {
+        if (!task) {
             return res.status(404).json({
                 status: 'error',
                 message: `Task with id ${id} not found`
@@ -109,19 +148,12 @@ export default {
 
     getLabels: async (req, res) => {
         const { id } = req.params;
-        const tasks = await Task.find({ _id: id }).populate('labels');
+        const tasks = await Task.findOne({ _id: id }).populate('labels');
 
-        if(!tasks) {
+        if (!tasks) {
             return res.status(404).json({
                 status: 'error',
                 message: `Task labels not found`
-            });
-        }
-
-        if(tasks.length === 0) {
-            return res.status(404).json({
-                status: 'error',
-                message: `There are no labels under the task with Id: ${id}`
             });
         }
         

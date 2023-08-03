@@ -1,4 +1,3 @@
-import admin from "firebase-admin";
 import { comparePassword, hashPassword } from "../helper/bcrypt.js";
 import { User } from "../model/index.js";
 

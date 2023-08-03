@@ -1,4 +1,5 @@
-import { Bucket } from "../model/index.js";
+import { Bucket, Task } from "../model/index.js";
+import { idsAreValidObjectIds, areIdsValid } from "../helper/validate.js";
 
 export default {
     getAllBuckets: async (req, res) => {
@@ -31,9 +32,24 @@ export default {
 
     addBucket: async (req, res) => {
         const { name, tasks } = req.body;
+
+        if (!idsAreValidObjectIds(tasks)) {
+            if (!areIdsValid(tasks, Task)) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Tasks not valid',
+                });
+            }
+        }
+
         const bucket = await Bucket.create({
             name: name, 
             tasks: tasks
+        }).catch((err) => {
+            return res.status(400).json({
+                status: 'error',
+                message: `Invalid values passed`,
+            })
         });
 
         return res.status(200).json({

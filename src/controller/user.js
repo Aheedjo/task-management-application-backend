@@ -1,4 +1,5 @@
-import { User } from "../model/index.js";
+import { Bucket, Task, User } from "../model/index.js";
+import { idsAreValidObjectIds, areIdsValid } from "../helper/validate.js";
 
 export default {
     getUser: async (req, res) => {
@@ -21,21 +22,45 @@ export default {
 
     addUser: async (req, res) => {
             const { email, name, password, buckets, tasks } = req.body;
+            
+            if (!idsAreValidObjectIds(tasks)) {
+                if (!areIdsValid(tasks, Task)) {
+                    return res.status(404).json({
+                        status: 'error',
+                        message: 'Tasks not valid',
+                    });
+                }
+            }
+
+            if (!idsAreValidObjectIds(buckets)) {
+                if (!areIdsValid(buckets, Bucket)) {
+                    return res.status(404).json({
+                        status: 'error',
+                        message: 'Buckets not valid',
+                    });
+                }
+            }
+            
             const user = await User.create({ 
                 name: name, 
                 email: email, 
                 password: password,
                 buckets: buckets,
                 tasks: tasks
+            }).catch((err) => {
+                return res.status(400).json({
+                    status: 'error',
+                    message: `Invalid values passed`,
+                })
             });
-        
+
             return res.status(200).json({
                 status: "success",
                 message: `Successfully added a user`,
                 data: user
             });
-    },
-    
+        },
+        
     updateUser: async (req, res) => {
         const { id } = req.params;
         const { name, email, password, buckets } = req.body;

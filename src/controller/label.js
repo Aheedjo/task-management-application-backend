@@ -18,7 +18,7 @@ export default {
         if(label) {
             return res.status(200).json({
                 status: 'success',
-                message: `Successfully requested label with id: ${id}`,
+                message: `Successfully requested label`,
                 data: label
             });
         } else {
@@ -31,7 +31,15 @@ export default {
 
     addLabel: async (req, res) => {
         const { name } = req.body;
-        const label = await Label.create({name: name})
+        const label = await Label.create({
+            name: name
+        }).catch((err) => {
+            return res.status(400).json({
+                status: 'error',
+                message: `Invalid values passed`,
+            })
+        });
+        
         return res.status(200).json({
             status: "success",
             message: `Successfully added a label`,
@@ -65,7 +73,7 @@ export default {
         
         return res.status(200).json({
             status: 'succes',
-            message: `Successfully updated label with id ${id}`,
+            message: `Successfully updated label`,
             data: label
         })
     },
@@ -83,7 +91,7 @@ export default {
         
         return res.status(200).json({
             status: 'succes',
-            message: `Successfully deleted label with id ${id}`,
+            message: `Successfully deleted label`,
         })
     },
 }
