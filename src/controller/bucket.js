@@ -19,13 +19,13 @@ export default {
         if(bucket) {
             return res.status(200).json({
                 status: 'success',
-                message: `Successfully requested bucket with id ${id}`,
+                message: `Successfully requested bucket`,
                 data: bucket
             });
         } else {
             return res.status(404).json({
                 status: 'error',
-                message: `Bucket with id: ${id} not found`
+                message: `Bucket not found`
             });
         }
     },
@@ -67,7 +67,7 @@ export default {
         if(!bucket) {
             return res.status(404).json({
                 status: 'error',
-                message: `Bucket with Id: ${id} not found`
+                message: `Bucket not found`
             });
         }
 
@@ -76,14 +76,14 @@ export default {
         }
 
         if (tasks) {
-            bucket.tasks = Array.from(new Set((bucket.tasks).concat(tasks)));
+            bucket.tasks = new Set(Array.from((bucket.tasks).concat(tasks)));
         }
 
         const updatedBucket = await bucket.save();
 
         return res.status(200).json({
             status: 'success',
-            message: `Successfully updated bucket with Id: ${id}`,
+            message: `Successfully updated bucket`,
             data: updatedBucket
         });
     },
@@ -95,13 +95,13 @@ export default {
         if(!bucket) {
             return res.status(404).json({
                 status: 'error',
-                message: `Bucket with id ${id} not found`
+                message: `Bucketnot found`
             });
         }
 
         return res.status(200).json({
             status: 'success',
-            message: `Successfully deleted bucket with Id: ${id}`,
+            message: `Successfully deleted bucket`,
         })
     },
 
@@ -109,24 +109,17 @@ export default {
         const { id } = req.params;
         const tasks = await Bucket.find({ _id: id }).populate('tasks');
 
-        if(!bucketTasks) {
+        if(!tasks) {
             return res.status(404).json({
                 status: 'error',
                 message: `Task not found`
             });
         }
 
-        if(bucketTasks.length === 0) {
-            return res.status(404).json({
-                status: 'error',
-                message: `There are no tasks under the bucket with Id: ${id}`
-            });
-        }
-        
         return res.status(200).json({
             status: 'success',
-            message: `Successfully requested tasks of bucket with Id: ${id}`,
-            data: bucketTasks
+            message: `Successfully requested tasks of bucket`,
+            data: tasks
         });
     }
 }

@@ -100,7 +100,7 @@ export default {
         if (!task) {
             return res.status(404).json({
                 status: 'error',
-                message: `task with id ${id} not found`
+                message: `task not found`
             });
         }
 
@@ -117,14 +117,14 @@ export default {
         }
 
         if (labels) {
-            task.labels = Array.from(new Set((task.labels).concat(labels)));
+            task.labels = new Set(Array.from((task.labels).concat(labels)));
         }
 
         const updatedTask = await task.save();
 
         return res.status(200).json({
             status: 'success',
-            message: `Successfully updated task with id ${id}`,
+            message: `Successfully updated task`,
             data: updatedTask
         })
     },
@@ -136,13 +136,13 @@ export default {
         if (!task) {
             return res.status(404).json({
                 status: 'error',
-                message: `Task with id ${id} not found`
+                message: `Task not found`
             });
         }
 
         return res.status(200).json({
             status: 'success',
-            message: `Successfully deleted task with id ${id}`,
+            message: `Successfully deleted task`,
         })
     },
 

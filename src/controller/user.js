@@ -1,5 +1,7 @@
 import { Bucket, Task, User } from "../model/index.js";
 import { idsAreValidObjectIds, areIdsValid } from "../helper/validate.js";
+import { hashPassword } from "../helper/bcrypt.js";
+import { removeDuplicates } from "../helper/removeDuplicates.js";
 
 export default {
     getUser: async (req, res) => {
@@ -9,19 +11,28 @@ export default {
         if(user) {
             return res.status(200).json({
                 status: 'success',
-                message: `Successfully requested user with Id: ${id}`,
+                message: `Successfully requested user`,
                 data: user
             });
         } else {
             return res.status(404).json({
                 status: 'error',
-                message: `user with Id: ${id} not found`
+                message: `user not found`
             });
         }
     },
 
     addUser: async (req, res) => {
-            const { email, name, password, buckets, tasks } = req.body;
+            const existingUser = await User.findOne({email: req.body.email});
+            const { name, email, password, buckets, tasks } = req.body;
+
+            if(existingUser) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: `Email already in use`,
+                });
+            }
+    
             
             if (!idsAreValidObjectIds(tasks)) {
                 if (!areIdsValid(tasks, Task)) {
@@ -40,11 +51,13 @@ export default {
                     });
                 }
             }
+
+            const hashed = await hashPassword(req.body.password);
             
             const user = await User.create({ 
                 name: name, 
                 email: email, 
-                password: password,
+                password: hashed,
                 buckets: buckets,
                 tasks: tasks
             }).catch((err) => {
@@ -63,13 +76,13 @@ export default {
         
     updateUser: async (req, res) => {
         const { id } = req.params;
-        const { name, email, password, buckets } = req.body;
+        const { name, email, password, buckets, tasks } = req.body;
         const user = await User.findOne({ _id: id });
         
         if(!user) {
             return res.status(404).json({
                 status: 'error',
-                message: `User with id ${id} not found`
+                message: `User not found`
             });
         }
         
@@ -86,14 +99,20 @@ export default {
         }
 
         if (buckets) {
-            user.buckets = Array.from(new Set((user.buckets).concat(buckets)));
+            user.buckets = new Set(Array.from((user.buckets).concat(buckets)));
         }
+
+        if (tasks) {
+            user.tasks = removeDuplicates(user.tasks, tasks);
+        }
+
+        console.log(removeDuplicates(user.tasks, tasks));
 
         const updatedUser = await user.save();
         
         return res.status(200).json({
             status: 'success',
-            message: `Successfully updated user with id ${id}`,
+            message: `Successfully updated user`,
             data: updatedUser
         })
     },
@@ -105,13 +124,13 @@ export default {
         if(!user) {
             return res.status(404).json({
                 status: 'error',
-                message: `User with Id: ${id} not found`
+                message: `User not found`
             });
         }
         
         return res.status(200).json({
             status: 'success',
-            message: `Successfully deleted user with Id: ${id}`,
+            message: `Successfully deleted user`,
         });
     },
     
@@ -130,7 +149,7 @@ export default {
         if(tasks.length === 0) {
             return res.status(404).json({
                 status: 'error',
-                message: `There are no tasks under the user with Id: ${id}`
+                message: `There are no tasks under the user`
             });
         }
         
@@ -155,13 +174,13 @@ export default {
         if(buckets.length === 0) {
             return res.status(404).json({
                 status: 'error',
-                message: `There are no buckets under the user with Id: ${id}`
+                message: `There are no buckets under the user`
             });
         }
         
         return res.status(200).json({
             status: 'success',
-            message: `Successfully requested buckets of user with Id: ${id} `,
+            message: `Successfully requested buckets of user `,
             data: buckets
         });
     }

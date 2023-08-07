@@ -24,7 +24,7 @@ export default {
         } else {
             return res.status(404).json({
                 status: 'error',
-                message: `label with id: ${id} not found`
+                message: `label not found`
             });
         }
     },
@@ -67,7 +67,7 @@ export default {
         if(!label) {
             return res.status(404).json({
                 status: 'error',
-                message: `Label with id ${id} not found`
+                message: `Label not found`
             });
         }
         
@@ -85,7 +85,7 @@ export default {
         if(!label) {
             return res.status(404).json({
                 status: 'error',
-                message: `Label with id ${id} not found`
+                message: `Label not found`
             });
         }
         
