@@ -1,3 +1,4 @@
+import cors from "cors"
 import express from "express";
 import bodyParser from "body-parser";
 import routes from "./route/index.js"
@@ -7,6 +8,7 @@ const app = express();
 connectDB();
 const port = 3050;
 
+app.use(cors());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
