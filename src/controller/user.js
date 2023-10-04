@@ -99,14 +99,12 @@ export default {
         }
 
         if (buckets) {
-            user.buckets = new Set(Array.from((user.buckets).concat(buckets)));
+            user.buckets = removeDuplicates(user.buckets, buckets);
         }
-
+        
         if (tasks) {
             user.tasks = removeDuplicates(user.tasks, tasks);
         }
-
-        console.log(removeDuplicates(user.tasks, tasks));
 
         const updatedUser = await user.save();
         
@@ -137,7 +135,6 @@ export default {
     getAllTasks: async (req, res) => {
         const { id } = req.params;
         const tasks = await User.find({ _id: id }).populate('tasks');
-
 
         if(!tasks) {
             return res.status(404).json({
@@ -181,7 +178,7 @@ export default {
         return res.status(200).json({
             status: 'success',
             message: `Successfully requested buckets of user `,
-            data: buckets
+            data: buckets[0].buckets
         });
     }
 }

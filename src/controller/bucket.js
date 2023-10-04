@@ -1,4 +1,4 @@
-import { Bucket, Task } from "../model/index.js";
+import { Bucket, Task, User } from "../model/index.js";
 import { idsAreValidObjectIds, areIdsValid } from "../helper/validate.js";
 
 export default {
@@ -31,7 +31,22 @@ export default {
     },
 
     addBucket: async (req, res) => {
-        const { name, tasks } = req.body;
+        const { name, tasks, user_id } = req.body;
+        const user = await User.findOne({ _id: user_id });
+        
+        if(!user_id) {
+            return res.status(404).json({
+                status: 'error',
+                message: `user_id is required`
+            });
+        }
+
+        if(!user) {
+            return res.status(404).json({
+                status: 'error',
+                message: `User not found`
+            });
+        }
 
         if (!idsAreValidObjectIds(tasks)) {
             if (!areIdsValid(tasks, Task)) {
@@ -51,6 +66,9 @@ export default {
                 message: `Invalid values passed`,
             })
         });
+
+        user.buckets.push(bucket._id);
+        await user.save();
 
         return res.status(200).json({
             status: 'success',
@@ -76,7 +94,7 @@ export default {
         }
 
         if (tasks) {
-            bucket.tasks = new Set(Array.from((bucket.tasks).concat(tasks)));
+            bucket.tasks = removeDuplicates(bucket.tasks, tasks);
         }
 
         const updatedBucket = await bucket.save();
@@ -95,9 +113,23 @@ export default {
         if(!bucket) {
             return res.status(404).json({
                 status: 'error',
-                message: `Bucketnot found`
+                message: `Bucket not found`
             });
         }
+
+        await User.findOne({buckets: bucket._id})
+            .then(async user => {
+                console.log(user);
+                user.buckets = user.buckets.filter(bucket_id => bucket_id != bucket._id);
+                console.log(user.buckets);
+                await user.save();
+            })
+            .catch(err => {
+                return res.status(404).json({
+                    status: 'error',
+                    message: `User not found`
+                });
+            })
 
         return res.status(200).json({
             status: 'success',
@@ -109,7 +141,9 @@ export default {
         const { id } = req.params;
         const tasks = await Bucket.find({ _id: id }).populate('tasks');
 
-        if(!tasks) {
+        console.log(tasks);
+
+        if(!tasks) {user
             return res.status(404).json({
                 status: 'error',
                 message: `Task not found`

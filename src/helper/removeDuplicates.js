@@ -1,13 +1,4 @@
 export const removeDuplicates = (arr1, arr2) => {
-    const merged = arr1.slice();
-
-    arr2.forEach(item => {
-        const existingItem = merged.find(existing => existing.id === item.id);
-
-        if (!existingItem) {
-            merged.push(item);
-        }
-    });
-      
+    const merged = [...new Set(Array.from((arr1.map(id => id.toString())).concat(arr2)))]
     return merged;
 }

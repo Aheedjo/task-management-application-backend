@@ -31,23 +31,24 @@ export default {
     },
 
     addTask: async (req, res) => {
-        const { name, userId ,bucketId, labels } = req.body;
-        const user = await User.findOne({_id: userId});
-        const bucket = await Bucket.findOne({_id: bucketId});
+        const { name, userId, bucketId, labels } = req.body;
         
         if (!bucketId) {
-            return res.status(404).json({
+            return res.status(400).json({
                 status: 'error',
                 message: 'Bucket Id not provided',
             });
         }
 
         if (!userId) {
-            return res.status(404).json({
+            return res.status(400).json({
                 status: 'error',
                 message: 'User Id not provided',
             });
         }
+
+        const user = await User.findOne({_id: userId});
+        const bucket = await Bucket.findOne({_id: bucketId});
 
         if (!user) {
             return res.status(404).json({
@@ -117,7 +118,7 @@ export default {
         }
 
         if (labels) {
-            task.labels = new Set(Array.from((task.labels).concat(labels)));
+             task.labels = removeDuplicates(task.labels, labels);
         }
 
         const updatedTask = await task.save();
