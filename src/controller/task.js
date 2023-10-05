@@ -86,6 +86,11 @@ export default {
             })
         });
 
+        user.tasks.push(task._id);
+        bucket.tasks.push(task._id);
+        await user.save();
+        await bucket.save();
+
         return res.status(200).json({
             status: 'success',
             message: `Successfully added task`,
@@ -118,7 +123,7 @@ export default {
         }
 
         if (labels) {
-             task.labels = removeDuplicates(task.labels, labels);
+            task.labels = removeDuplicates(task.labels, labels);
         }
 
         const updatedTask = await task.save();
@@ -140,6 +145,18 @@ export default {
                 message: `Task not found`
             });
         }
+
+        await Bucket.findOne({tasks: task._id})
+            .then(async bucket => {
+                bucket.tasks = bucket.tasks.filter(task_id => task_id.toString() != task._id);
+                await bucket.save();
+            })
+            .catch(err => {
+                return res.status(404).json({
+                    status: 'error',
+                    message: `Bucket not found`
+                });
+            })
 
         return res.status(200).json({
             status: 'success',

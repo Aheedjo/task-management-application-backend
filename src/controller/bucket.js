@@ -119,9 +119,7 @@ export default {
 
         await User.findOne({buckets: bucket._id})
             .then(async user => {
-                console.log(user);
-                user.buckets = user.buckets.filter(bucket_id => bucket_id != bucket._id);
-                console.log(user.buckets);
+                user.buckets = user.buckets.filter(bucket_id => bucket_id.toString() != bucket._id);
                 await user.save();
             })
             .catch(err => {
@@ -141,9 +139,7 @@ export default {
         const { id } = req.params;
         const tasks = await Bucket.find({ _id: id }).populate('tasks');
 
-        console.log(tasks);
-
-        if(!tasks) {user
+        if(!tasks) {
             return res.status(404).json({
                 status: 'error',
                 message: `Task not found`
