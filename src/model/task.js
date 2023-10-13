@@ -7,6 +7,13 @@ const task = new mongoose.Schema({
     },
     status: {
         type: String,
+        required: true,
+        enum: [
+            'none',
+            'ongoing',
+            'completed'
+        ],
+        default: 'none',
     },
     labels: [{
         type: mongoose.Schema.Types.ObjectId,
