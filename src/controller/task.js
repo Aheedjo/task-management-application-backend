@@ -102,7 +102,7 @@ export default {
         const { id } = req.params;
         const { name, status, labels, bucketId } = req.body;
         const task = await Task.findOne({ _id: id });
-
+        
         if (!task) {
             return res.status(404).json({
                 status: 'error',
@@ -117,7 +117,7 @@ export default {
         if (bucketId) {
             task.bucketId = bucketId;
         }
-
+        
         if (status) {
             task.status = status;
         }
@@ -127,12 +127,49 @@ export default {
         }
 
         const updatedTask = await task.save();
-
+        
         return res.status(200).json({
             status: 'success',
             message: `Successfully updated task`,
             data: updatedTask
         })
+    },
+
+    updateTaskStatus: async (req, res) => {
+        const { id } = req.params;
+        const { status } = req.body;
+        const task = await Task.findOneAndUpdate(
+            { 
+                _id: id
+            },
+            {
+                $set: {
+                    orderStatus: status,
+                },
+            },
+            {
+                new: true,
+            }
+        );
+
+        if (!task) {
+            return res.status(404).json({
+                status: 'error',
+                message: `task not found`
+            });
+        }
+
+        if (status) {
+            task.status = status;
+        }
+
+        const updatedTask = await task.save();
+
+        return res.status(200).json({
+            status: 'success',
+            message: `Successfully updated task status to ${updatedTask.status}`,
+            data: updatedTask
+        })        
     },
 
     deleteTask: async (req, res) => {
