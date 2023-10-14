@@ -24,3 +24,5 @@ app.use(routes);
 app.listen(port, () => {
     console.log(`Task manager backend listening on port ${port}`);
 });
+
+export default app;
