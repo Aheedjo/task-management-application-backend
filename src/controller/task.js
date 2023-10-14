@@ -167,7 +167,7 @@ export default {
 
         return res.status(200).json({
             status: 'success',
-            message: `Successfully updated task status to ${updatedTask.status}`,
+            message: `Successfully updated task status.`,
             data: updatedTask
         })        
     },
