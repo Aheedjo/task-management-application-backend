@@ -77,7 +77,7 @@ export default {
             name: name,
             userId: userId,
             bucketId: bucketId,
-            status: 'New task',
+            status: 'none',
             labels: labels,
         }).catch((err) => {
             return res.status(400).json({
